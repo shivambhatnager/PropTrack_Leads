@@ -23,16 +23,36 @@ const HEADERS = ['id','name','phone','email','source','property','proptype','bud
 function doGet(e) {
   try {
     const action = e.parameter.action;
+    const callback = e.parameter.callback; // JSONP support
 
     if (action === 'getAll') {
       const leads = getAllLeads();
-      return jsonResponse({ success: true, data: leads });
+      const result = { success: true, data: leads };
+      if (callback) {
+        return ContentService
+          .createTextOutput(`${callback}(${JSON.stringify(result)})`)
+          .setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      return jsonResponse(result);
     }
 
-    return jsonResponse({ success: false, error: 'Unknown action' });
+    const result = { success: false, error: 'Unknown action' };
+    if (callback) {
+      return ContentService
+        .createTextOutput(`${callback}(${JSON.stringify(result)})`)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return jsonResponse(result);
 
   } catch (err) {
-    return jsonResponse({ success: false, error: err.toString() });
+    const result = { success: false, error: err.toString() };
+    const callback = e.parameter.callback;
+    if (callback) {
+      return ContentService
+        .createTextOutput(`${callback}(${JSON.stringify(result)})`)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return jsonResponse(result);
   }
 }
 
